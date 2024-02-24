@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Task 1</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .letter-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .letter {
+            font-size: 80px;
+            margin: 0 20px;
+            animation: jump 2s infinite alternate ease-in-out;
+        }
+        
+        @keyframes jump {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-100px);
+            }
+        }
+    </style>
+</head>
+<-- буквы примитивов в виде свг <body>
+    <div class="letter-container">
+        <div class="letter" style="color: red;">В</div>
+        <div class="letter" style="color: green;">И</div>
+        <div class="letter" style="color: blue;">Д</div>
+    </div>
+
+    <script>
+        const letters = document.querySelectorAll('.letter');
+        letters.forEach(letter => {
+            const delay = Math.random() * 2;
+            letter.style.animationDelay = `${delay}s`;
+        });
+    </script>
+    </body>
+
+    </html>
