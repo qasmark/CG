@@ -1,0 +1,21 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#imageContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#imageView {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+#imageView.draggable {
+    cursor: move;
+}
