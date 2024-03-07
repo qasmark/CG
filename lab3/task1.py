@@ -10,7 +10,7 @@ class OpenGLWidget(QOpenGLWidget):
     def __init__(self):
         super().__init__()
 
-        self.control_points = [(0, 0), (2, 5), (4, -3), (6, 2)]  # Example control points
+        self.control_points = [(0, 0), (2, 5), (4, -3), (6, 2)]
         self.selected_point_index = None
 
     def initializeGL(self):

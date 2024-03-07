@@ -3,20 +3,16 @@ from OpenGL.GL import *
 import random
 import numpy as np
 
-# Параметры окна
+
 WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 900
-
-# Параметры частиц
 PARTICLE_RADIUS = 10
-PARTICLE_COLOR_POSITIVE = (1.0, 0.0, 0.0)  # Красный
-PARTICLE_COLOR_NEGATIVE = (0.0, 0.0, 1.0)  # Синий
+PARTICLE_COLOR_POSITIVE = (1.0, 0.0, 0.0)
+PARTICLE_COLOR_NEGATIVE = (0.0, 0.0, 1.0)
+K_COULOMB = 0.0001
+MAX_FORCE_DISTANCE = 100
 
-# Константы для сил Кулона
-K_COULOMB = 0.0001  # Коэффициент силы Кулона
-MAX_FORCE_DISTANCE = 100  # Максимальное расстояние, на котором действует отталкивание
-
-particles = []  # Список частиц
+particles = []
 
 
 def compute_forces():
@@ -24,25 +20,51 @@ def compute_forces():
         particle['force'] = np.array([0.0, 0.0])
         for j, other_particle in enumerate(particles):
             if i != j:
-                # Расчет силы Кулона
                 distance = np.linalg.norm(particle['position'] - other_particle['position'])
                 force_magnitude = K_COULOMB * (1 / distance ** 2)
                 force_direction = (other_particle['position'] - particle['position']) / distance
                 force = force_magnitude * force_direction
 
-                # Добавляем отталкивание на коротком расстоянии
                 if distance < MAX_FORCE_DISTANCE or particle['charge'] * other_particle['charge'] > 0:
                     force += force_direction * 10 / distance
                 particle['force'] += force
 
 
+def handle_collision_with_boundaries(particle):
+    position = particle['position']
+    radius = PARTICLE_RADIUS
+
+    if position[0] - radius < 0:
+        position[0] = radius
+        particle['velocity'][0] *= -1
+    elif position[0] + radius > WINDOW_WIDTH:
+        position[0] = WINDOW_WIDTH - radius
+        particle['velocity'][0] *= -1
+    if position[1] - radius < 0:
+        position[1] = radius
+        particle['velocity'][1] *= -1
+    elif position[1] + radius > WINDOW_HEIGHT:
+        position[1] = WINDOW_HEIGHT - radius
+        particle['velocity'][1] *= -1
+# использовать силы в векторной форме
+
+def generate_random_particles(num_particles):
+    for _ in range(num_particles):
+        x = random.uniform(PARTICLE_RADIUS, WINDOW_WIDTH - PARTICLE_RADIUS)
+        y = random.uniform(PARTICLE_RADIUS, WINDOW_HEIGHT - PARTICLE_RADIUS)
+        velocity = np.array([random.uniform(-1, 1), random.uniform(-1, 1)])
+        mass = random.uniform(0.001, 0.01)
+        charge = random.choice([-1, 1])
+        particles.append({'position': np.array([x, y]), 'velocity': velocity, 'mass': mass, 'charge': charge})
+
+
 def update_particles(delta_time):
     compute_forces()
     for particle in particles:
-        # Применение силы к частице
         acceleration = particle['force'] / particle['mass']
         particle['velocity'] += acceleration * delta_time
         particle['position'] += particle['velocity'] * delta_time
+        handle_collision_with_boundaries(particle)
 
 
 def draw_circle(position, radius, color):
@@ -101,16 +123,12 @@ def draw_particles():
 
 def on_mouse_button(window, button, action, mods):
     if action == glfw.PRESS:
-        window_x, window_y = glfw.get_window_pos(window)
-        width, height = glfw.get_framebuffer_size(window)
         x, y = glfw.get_cursor_pos(window)
-        #x = (x - window_x) / width * WINDOW_WIDTH
-        #y = (height - (y - window_y)) / height * WINDOW_HEIGHT
         if button == glfw.MOUSE_BUTTON_LEFT:
-            particles.append({'position': np.array([x, y]), 'velocity': np.array([0.0, 0.0]), 'mass': 1.0, 'charge': 1})
+            particles.append({'position': np.array([x, y]), 'velocity': np.array([0.0, 0.0]), 'mass': 1.007, 'charge': 1})
         elif button == glfw.MOUSE_BUTTON_RIGHT:
-            particles.append({'position': np.array([x, y]), 'velocity': np.array([0.0, 0.0]), 'mass': 1.0, 'charge': -1})
-        elif button == glfw.MOUSE_BUTTON_MIDDLE:
+            particles.append({'position': np.array([x, y]), 'velocity': np.array([0.0, 0.0]), 'mass': 0.005, 'charge': -1})
+        else:
             particles_to_remove = []
             for particle in particles:
                 distance = np.linalg.norm(np.array([x, y]) - particle['position'])
@@ -131,7 +149,7 @@ def main():
     if not glfw.init():
         return
 
-    window = glfw.create_window(WINDOW_WIDTH, WINDOW_HEIGHT, "Charged Particles Simulation", None, None)
+    window = glfw.create_window(WINDOW_WIDTH, WINDOW_HEIGHT, "Симуляция частиц", None, None)
     if not window:
         glfw.terminate()
         return
@@ -141,6 +159,8 @@ def main():
     glfw.set_key_callback(window, on_key)
 
     glOrtho(0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, -1, 1)
+
+    generate_random_particles(20)
 
     while not glfw.window_should_close(window):
         glfw.poll_events()
@@ -154,11 +174,5 @@ def main():
 
     glfw.terminate()
 
-
 if __name__ == "__main__":
-#    random_positions = [(random.uniform(0, WINDOW_WIDTH), random.uniform(0, WINDOW_HEIGHT)) for _ in range(20)]
-#    for position in random_positions:
-#        charge = random.choice([1, -1])  # Случайно выбираем заряд частицы
-#        particles.append(
-#            {'position': np.array(position), 'velocity': np.array([0.0, 0.0]), 'mass': 1.0, 'charge': charge})
     main()
