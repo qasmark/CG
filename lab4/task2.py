@@ -48,7 +48,8 @@ class GLWidget(QOpenGLWidget):
         radius_minor = 1.0
         num_segments_major = 50
         num_segments_minor = 25
-
+# передеать в параметры через класс, не через константы
+# сделать два тора
         for i in range(num_segments_major):
             glBegin(GL_TRIANGLE_STRIP)
             for j in range(num_segments_minor + 1):

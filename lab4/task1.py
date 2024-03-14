@@ -131,6 +131,7 @@ class GLWidget(QOpenGLWidget):
                 glVertex3fv(vertices[vertexIndex])
         glEnd()
 
+# вращение вокруг экранной системы координат (моделирование вида)
     def mousePressEvent(self, event):
         self.lastPos = event.pos()
 
