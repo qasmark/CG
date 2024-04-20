@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QOpenGLWidget
 from PyQt5.QtCore import QTimer
 from OpenGL.GL import *
+from OpenGL.GLU import gluPerspective
 
 # TODO: Поправить aspect ratio
 
@@ -59,8 +60,12 @@ class OpenGLWidget(QOpenGLWidget):
         glClearColor(0.2, 0.2, 0.2, 1.0)
         self.shader_program = self.compile_shaders()
 
-    def resizeGL(self, width, height):
-        glViewport(0, 0, width, height)
+    def resizeGL(self, w, h):
+        glViewport(0, 0, w, h)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluPerspective(45, w / h, 0.1, 100.0)
+        glMatrixMode(GL_MODELVIEW)
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)

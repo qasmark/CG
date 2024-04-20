@@ -5,8 +5,8 @@ from OpenGL.GL.shaders import compileProgram, compileShader
 from OpenGL.arrays import vbo
 import numpy as np
 from PIL import Image
-# TODO: перестакивание мыши в масштабе 1 к 1 (по пикселям)
-# TODO: масштабирование должно сохранять точку в центре экрана
+# перестакивание мыши в масштабе 1 к 1 (по пикселям) [+]
+# масштабирование должно сохранять точку в центре экрана [+]
 
 
 VERTEX_SHADER = """
@@ -92,8 +92,19 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if event.buttons() == Qt.LeftButton and self.last_pos:
             dx = event.x() - self.last_pos.x()
             dy = self.last_pos.y() - event.y()
-            self.area_w -= dx * 0.005
-            self.area_h -= dy * 0.005
+
+            # Вычисляем текущий размер области рендеринга
+            area_width = self.area_w[1] - self.area_w[0]
+            area_height = self.area_h[1] - self.area_h[0]
+
+            # Вычисляем соответствующие изменения в координатах области рендеринга
+            dx_scaled = dx * area_width / self.width()
+            dy_scaled = dy * area_height / self.height()
+
+            # Корректируем область рендеринга в соответствии с изменениями
+            self.area_w -= dx_scaled
+            self.area_h -= dy_scaled
+
             self.last_pos = event.pos()
             self.update()
 
@@ -143,29 +154,30 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4)
 
     def keyPressEvent(self, event):
-        zoom_factor = 0.1
-        window_center_x = (self.area_w[0] + self.area_w[1]) / 2
-        window_center_y = (self.area_h[0] + self.area_h[1]) / 2
-        if event.key() == Qt.Key_Up:
-            self.area_h += 0.1 * zoom_factor
-        elif event.key() == Qt.Key_Down:
-            self.area_h -= 0.1 * zoom_factor
-        elif event.key() == Qt.Key_Left:
-            self.area_w -= 0.1 * zoom_factor
+        step = 10
+
+        if event.key() == Qt.Key_Down:
+            dx = 0
+            dy = step
+        elif event.key() == Qt.Key_Up:
+            dx = 0
+            dy = -step
         elif event.key() == Qt.Key_Right:
-            self.area_w += 0.1 * zoom_factor
-        elif event.key() == Qt.Key_PageUp:
-            zoom_adjusted = 0.9 ** zoom_factor
-            self.area_w *= zoom_adjusted
-            self.area_h *= zoom_adjusted
-            self.area_w += (1 - zoom_adjusted) * (window_center_x - self.area_w[0])
-            self.area_h += (1 - zoom_adjusted) * (window_center_y - self.area_h[0])
-        elif event.key() == Qt.Key_PageDown:
-            zoom_adjusted = 0.9 ** zoom_factor
-            self.area_w /= zoom_adjusted
-            self.area_h /= zoom_adjusted
-            self.area_w += (1 - 1 / zoom_adjusted) * (window_center_x - self.area_w[0])
-            self.area_h += (1 - 1 / zoom_adjusted) * (window_center_y - self.area_h[0])
+            dx = -step
+            dy = 0
+        elif event.key() == Qt.Key_Left:
+            dx = step
+            dy = 0
+        else:
+            return
+
+        area_width = self.area_w[1] - self.area_w[0]
+        area_height = self.area_h[1] - self.area_h[0]
+        dx_scaled = dx * area_width / self.width()
+        dy_scaled = dy * area_height / self.height()
+        self.area_w -= dx_scaled
+        self.area_h -= dy_scaled
+
         self.update()
 
     def closeEvent(self, event):
