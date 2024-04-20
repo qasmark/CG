@@ -9,8 +9,7 @@ VERTEX_SHADER = """
 layout(location = 0) in vec3 position;
 
 uniform float progress;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 projection_view;
 
 void main()
 {
@@ -18,16 +17,16 @@ void main()
     vec3 final_position = vec3(position.x, position.y, position.x * position.x - position.y * position.y);
     vec3 morphed_position = mix(initial_position, final_position, progress);
 
-    gl_Position = projection * view * vec4(morphed_position, 1.0);
+    gl_Position = projection_view * vec4(morphed_position, 1.0);
 }
 """
 
-# TODO: перспективное преборазование
-# TODO: gl_Position = projection * view * vec4(morphed_position, 1.0); 1.0 - для чего используется
-# TODO: назначение атрибутивных переменных
-# TODO: вместо перемемножения projection and view использовать производние матриц вне шайдера
-# TODO: почему внесение вычислений вне шейдера ускоряет отрисовку
-# TODO: сделать вращение  камеры
+# перспективное преборазование [+]
+# gl_Position = projection * view * vec4(morphed_position, 1.0); 1.0 - для чего используется [+]
+# назначение атрибутивных переменных [+]
+# вместо перемемножения projection and view использовать производние матриц вне шайдера [+]
+# почему внесение вычислений вне шейдера ускоряет отрисовку [+]
+# сделать вращение камеры [-]
 
 FRAGMENT_SHADER = """
 #version 330 core
@@ -52,6 +51,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.timer.start(16)
         self.direction = 1
         self.speed = 0.05
+        self.view_matrix = self.rotate_y(45) @ self.translate_z(-3.5) @ self.translate_x(-2.5)
+        self.projection_matrix = self.perspective(45, self.width() / self.height(), 0.1, 100)
+        self.projection_view_matrix = np.dot(self.projection_matrix, self.view_matrix)
+
+
 
     def initializeGL(self):
         glClearColor(0.2, 0.2, 0.2, 1.0)
@@ -66,11 +70,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         glUseProgram(self.program)
 
         glUniform1f(glGetUniformLocation(self.program, "progress"), self.progress)
-
-        view_matrix = self.rotate_y(45) @ self.translate_z(-3.5) @ self.translate_x(-2.5)
-        projection_matrix = self.perspective(45, self.width() / self.height(), 0.1, 100)
-        glUniformMatrix4fv(glGetUniformLocation(self.program, "view"), 1, GL_TRUE, view_matrix)
-        glUniformMatrix4fv(glGetUniformLocation(self.program, "projection"), 1, GL_TRUE, projection_matrix)
+        glUniformMatrix4fv(glGetUniformLocation(self.program, "projection_view"), 1, GL_TRUE, self.projection_view_matrix)
 
         self.draw_surface()
 
@@ -109,6 +109,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.direction = 1
         self.update()
 
+    def perspective(self, fov, aspect, near, far):
+        f = 1.0 / np.tan(np.radians(fov) / 2)
+        projection_matrix = np.array([[f / aspect, 0, 0, 0],
+                                      [0, f, 0, 0],
+                                      [0, 0, (far + near) / (near - far), 2 * far * near / (near - far)],
+                                      [0, 0, -1, 0]], dtype=np.float32)
+        return projection_matrix
+
     def closeEvent(self, event):
         self.timer.stop()
 
@@ -136,13 +144,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                                        [0, 0, 0, 1]], dtype=np.float32)
         return translation_matrix
 
-    def perspective(self, fov, aspect, near, far):
-        f = 1.0 / np.tan(np.radians(fov) / 2)
-        projection_matrix = np.array([[f / aspect, 0, 0, 0],
-                                      [0, f, 0, 0],
-                                      [0, 0, (far + near) / (near - far), 2 * far * near / (near - far)],
-                                      [0, 0, -1, 0]], dtype=np.float32)
-        return projection_matrix
+    # def perspective(self, fov, aspect, near, far):
+    #     f = 1.0 / np.tan(np.radians(fov) / 2)
+    #     projection_matrix = np.array([[f / aspect, 0, 0, 0],
+    #                                   [0, f, 0, 0],
+    #                                   [0, 0, (far + near) / (near - far), 2 * far * near / (near - far)],
+    #                                   [0, 0, -1, 0]], dtype=np.float32)
+    #     return projection_matrix
 
 
 if __name__ == "__main__":
