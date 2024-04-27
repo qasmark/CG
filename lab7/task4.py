@@ -93,15 +93,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             dx = event.x() - self.last_pos.x()
             dy = self.last_pos.y() - event.y()
 
-            # Вычисляем текущий размер области рендеринга
             area_width = self.area_w[1] - self.area_w[0]
             area_height = self.area_h[1] - self.area_h[0]
 
-            # Вычисляем соответствующие изменения в координатах области рендеринга
             dx_scaled = dx * area_width / self.width()
             dy_scaled = dy * area_height / self.height()
 
-            # Корректируем область рендеринга в соответствии с изменениями
             self.area_w -= dx_scaled
             self.area_h -= dy_scaled
 
