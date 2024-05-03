@@ -4,7 +4,64 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from PIL import Image
+from math import sin, cos, pi
 
+# сохранять пропорции при изменении окна [-]
+# бесшовную текстуру для солнца [-]
+# повернуть ось вращения планеты [-]
+# вращение луны по наклонной орбите а не по экватору [-]
+
+
+def draw_skybox_sphere(radius, slices, stacks, textures):
+    quadric = gluNewQuadric()
+    gluQuadricTexture(quadric, GL_TRUE)
+    gluQuadricNormals(quadric, GLU_SMOOTH)
+
+    for i in range(len(textures)):
+        glBindTexture(GL_TEXTURE_2D, textures[i])
+
+        glBegin(GL_QUADS)
+        for j in range(slices + 1):
+            lat0 = pi * (-0.5 + (i) / stacks)
+            z0 = sin(lat0)
+            zr0 = cos(lat0)
+
+            lat1 = pi * (-0.5 + (i + 1) / stacks)
+            z1 = sin(lat1)
+            zr1 = cos(lat1)
+
+            lng0 = 2 * pi * (j - 1) / slices
+            lng1 = 2 * pi * j / slices
+
+            x00 = cos(lng0) * zr0 * radius
+            y00 = sin(lng0) * zr0 * radius
+            z00 = z0 * radius
+
+            x01 = cos(lng1) * zr0 * radius
+            y01 = sin(lng1) * zr0 * radius
+            z01 = z0 * radius
+
+            x10 = cos(lng0) * zr1 * radius
+            y10 = sin(lng0) * zr1 * radius
+            z10 = z1 * radius
+
+            x11 = cos(lng1) * zr1 * radius
+            y11 = sin(lng1) * zr1 * radius
+            z11 = z1 * radius
+
+            glTexCoord2f(j / slices, i / stacks)
+            glVertex3f(x00, y00, z00)
+
+            glTexCoord2f((j + 1) / slices, i / stacks)
+            glVertex3f(x01, y01, z01)
+
+            glTexCoord2f((j + 1) / slices, (i + 1) / stacks)
+            glVertex3f(x11, y11, z11)
+
+            glTexCoord2f(j / slices, (i + 1) / stacks)
+            glVertex3f(x10, y10, z10)
+
+        glEnd()
 
 def draw_sphere(radius, slices, stacks):
     quadric = gluNewQuadric()
@@ -255,29 +312,29 @@ class SolarSystemWidget(QOpenGLWidget):
         glVertex3f(-50, -50, 50)
         glEnd()
 
-        # Left side
+        # Right side
         glBindTexture(GL_TEXTURE_2D, self.skybox_textures[4])
         glBegin(GL_QUADS)
-        glTexCoord2f(1, 1)
-        glVertex3f(-50, -50, -50)
-        glTexCoord2f(0, 1)
-        glVertex3f(-50, -50, 50)
         glTexCoord2f(0, 0)
-        glVertex3f(-50, 50, 50)
+        glVertex3f(-50, -50, -50)
         glTexCoord2f(1, 0)
+        glVertex3f(-50, -50, 50)
+        glTexCoord2f(1, 1)
+        glVertex3f(-50, 50, 50)
+        glTexCoord2f(0, 1)
         glVertex3f(-50, 50, -50)
         glEnd()
 
-        # Right side
+        # Left side
         glBindTexture(GL_TEXTURE_2D, self.skybox_textures[5])
         glBegin(GL_QUADS)
-        glTexCoord2f(0, 1)
-        glVertex3f(50, -50, -50)
-        glTexCoord2f(1, 1)
-        glVertex3f(50, -50, 50)
-        glTexCoord2f(1, 0)
-        glVertex3f(50, 50, 50)
         glTexCoord2f(0, 0)
+        glVertex3f(50, -50, -50)
+        glTexCoord2f(1, 0)
+        glVertex3f(50, -50, 50)
+        glTexCoord2f(1, 1)
+        glVertex3f(50, 50, 50)
+        glTexCoord2f(0, 1)
         glVertex3f(50, 50, -50)
         glEnd()
 
