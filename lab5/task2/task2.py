@@ -7,6 +7,7 @@ from OpenGL.GLU import *
 from PIL import Image
 import random
 
+
 class GameWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -86,7 +87,7 @@ class MyOpenGLWidget(QOpenGLWidget):
                 self.tile_textures[f"tile_{i}"] = texture_id
                 self.tile_numbers[(i // 2, (i - 1) % 2)] = i
             else:
-                print(f"Не удалось загрузить текстуру: {texture_path}")
+                print(f"Failed to load image: {texture_path}")
 
     def initializeGL(self):
         glClearColor(0.2, 0.2, 0.2, 1.0)
@@ -220,8 +221,8 @@ class MyOpenGLWidget(QOpenGLWidget):
 
         if 0 <= i < self.grid_height and 0 <= j < self.grid_width:
             if not self.tile_states[i][j]:
-                # Если плитка не открыта, открываем ее
-                # TODO: fix cause it does'nt show when it has status open
+                # If tile doesn't open then rotate it
+                # TODO: fix cause it doesn't show when it has status open
                 self.rotation_counts[(self.grid_width, self.grid_height)] += 1
                 self.rotation_count_changed.emit(self.rotation_counts[(self.grid_width, self.grid_height)])
                 self.tile_states[i][j] = True
@@ -230,7 +231,7 @@ class MyOpenGLWidget(QOpenGLWidget):
                 self.animation_timer.start(self.animation_frame_interval)
                 self.update()
             else:
-                # Если плитка уже открыта, закрываем ее
+                # If tile already open the close it
                 # TODO: fix
                 self.tile_states[i][j] = False
                 self.clicked_tile = None
@@ -238,7 +239,7 @@ class MyOpenGLWidget(QOpenGLWidget):
                 self.update()
 
     def open_tile(self, i, j):
-        # Открывает плитку с координатами (i, j) и устанавливает соответствующую текстуру
+        # Open tile fir cords (i, j) and set texture tile_i.png
         # TODO: fix
         self.rotation_counts[(self.grid_width, self.grid_height)] += 1
         self.rotation_count_changed.emit(self.rotation_counts[(self.grid_width, self.grid_height)])
